@@ -18,11 +18,10 @@ def doCrossValidation (D, k, h):
         if accuracy>acc:
             acc=accuracy
             h_best=h
-        # # Test the model on the testing data
-        # accuracies.append(testModel(model, D[testIdxs]))
-
+ 
     return h_best
 
+# H is the list of list of hyperparameters
 
 
 def doDoubleCrossValidation(D, k, H):
