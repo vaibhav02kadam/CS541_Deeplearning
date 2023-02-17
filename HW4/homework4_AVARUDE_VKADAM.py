@@ -107,9 +107,7 @@ def forwardpass(X,Y,weights):
 def gradCE (X, Y, weights):
   Ws, bs = unpack(weights)
   all_z,all_h,prediction=forwardpass(X,Y,weights)
-  # print("len z",len(Ws))
-  # print("len h",len(all_h))
-  # print("predictions", prediction.shape)
+
   gradJ_Ws=[]
   gradJ_bias=[]
   g=prediction-Y
@@ -127,12 +125,11 @@ def gradCE (X, Y, weights):
     g=np.dot(g.T,Ws[i])*relu_prime(all_z[i].T)
     g=g.T
   gradJ_Ws=gradJ_Ws[::-1]    
-  gradJ_bias=gradJ_bias[::-1]  
-  for i in range(len(Ws)):
-    gradJ_Ws[i]=gradJ_Ws[i]+(alpha*Ws[i]/n)
+  gradJ_bias=gradJ_bias[::-1] 
+  #For regularisation of weights if needed 
+  # for i in range(len(Ws)):
+  #   gradJ_Ws[i]=gradJ_Ws[i]+(alpha*Ws[i]/n)
 
-  # gradJ_Ws.reverse()
-  # gradJ_bias.reverse()
   grad_weights = np.hstack([ W.flatten() for W in gradJ_Ws ] + [ b.flatten() for b in gradJ_bias ])
   return grad_weights
 
@@ -145,10 +142,12 @@ def batch_former(X,Y,batchsize):
     yield x[:,i:i+batchsize],y[:,i:i+batchsize]
 
 
-def train(trainX, trainY, weights, testX, testY, lr):
-  epochs=10 #100
-  lr=0.01
-  batch_size=64 #128
+
+def train(trainX, trainY, weights, testX, testY, lr,hyper):
+  lr=hyper[0]
+  batch_size=hyper[1]
+  epochs=hyper[2]
+
   great_acc=0
   for epoch in range(epochs):
     print("epoch :",epoch)
@@ -188,7 +187,7 @@ def initWeightsAndBiases ():
   bs.append(b)
   return Ws, bs
 
-  def show_W0 (W):
+def show_W0(W):
     Ws,bs = unpack(W)
     W = Ws[0]
     n = int(NUM_HIDDEN[0] ** 0.5)
@@ -247,14 +246,25 @@ if __name__ == "__main__":
     # check_grad and approx_fprime, the only parameter to fCE is the weights
     # themselves (not the training data).
     # print(np.atleast_2d(X_test[:,0:5]).shape)
-    # print(scipy.optimize.check_grad(lambda weights_: fCE(np.atleast_2d(X_test[:,0:5]), np.atleast_2d(new_ytest[:,0:5]), weights_), \
-    #                                 lambda weights_: gradCE(np.atleast_2d(X_test[:,0:5]), np.atleast_2d(new_ytest[:,0:5]), weights_), \
-    #                                 weights))
+    
+    print(scipy.optimize.check_grad(lambda weights_: fCE(np.atleast_2d(X_test[:,0:5]), np.atleast_2d(new_ytest[:,0:5]), weights_), \
+                                    lambda weights_: gradCE(np.atleast_2d(X_test[:,0:5]), np.atleast_2d(new_ytest[:,0:5]), weights_), \
+                                    weights))
     # a=scipy.optimize.approx_fprime(weights, lambda weights_: 
     #   fCE(np.atleast_2d(X_test[:,0:5]), np.atleast_2d(new_ytest[:,0:5]), weights_), 1e-6)
     # with np.printoptions(threshold=np.inf):
     #   print(weights)
     #   print(a)
 
-    weights,good_weights,good_acc = train(X_tr, new_ytr, weights, X_test, new_ytest, 0.001)
-    # show_W0(weights)
+    hyper=[0.001,64,150]
+
+    weights,good_weights,good_acc = train(X_tr, new_ytr, weights, X_test, new_ytest, hyper)
+    show_W0(weights)
+
+    show_W0(good_weights)
+
+    loss=fCE(X_test, new_ytest,good_weights)
+    print("testing_loss :",loss)
+    acc=cal_acc(X_test, new_ytest,good_weights)
+    print("testing_acc:" ,acc)
+
