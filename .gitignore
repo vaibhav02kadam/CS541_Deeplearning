@@ -1,2 +1,2 @@
 *.zip
-.data/*
+./HW4/data/fashion_mnist*
